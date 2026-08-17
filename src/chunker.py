@@ -1,3 +1,4 @@
+#Chunking Process
 def chunk_text(text, chunk_size=700, overlap=100):
     chunks = []
 
