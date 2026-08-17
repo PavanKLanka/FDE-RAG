@@ -197,7 +197,5 @@ CUSTOMER QUESTION:
         total_cost=cost_result["total_cost"],
         status="success",
     )
-
-    print("usage_record", usage_record)
-
+    #print("usage_record", usage_record)
     return response.text
