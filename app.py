@@ -1,12 +1,11 @@
 from src.rag import answer_question
 import streamlit as st
 
-st.set_page_config(page_title="SupportPilot AI", page_icon="🤖")
+st.set_page_config(page_title="Support AI", page_icon="🤖")
 
 
-st.title("🤖 SupportPilot AI")
-
-st.caption("AI Customer Support Assistant")
+st.title("🤖 Support AI")
+st.caption("AI Assistant")
 
 
 if "messages" not in st.session_state:
