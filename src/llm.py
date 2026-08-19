@@ -6,7 +6,7 @@ import os
 import json
 from src.monitoring.usage import LLMUsage
 from src.monitoring.cost import calculate_cost
-
+from src.monitoring.database import save_usage_record
 
 # ============================================================
 # 1. LOAD ENVIRONMENT VARIABLES
@@ -182,20 +182,23 @@ CUSTOMER QUESTION:
     print("Output Cost:", cost_result["output_cost"])
     print("Total Cost:", cost_result["total_cost"])
     print("#########################################################")
-
+    
     usage_record = LLMUsage(
-        provider="Google",
-        model="gemini-3.1-flash-lite",
-        request_id=response.response_id,
-        timestamp=datetime.now(timezone.utc),
-        input_tokens=response.usage_metadata.prompt_token_count,
-        output_tokens=response.usage_metadata.candidates_token_count,
-        total_tokens=response.usage_metadata.total_token_count,
-        latency_ms=latency_ms,
-        input_cost=cost_result["input_cost"],
-        output_cost=cost_result["output_cost"],
-        total_cost=cost_result["total_cost"],
-        status="success",
+    provider="Google",
+    model="gemini-3.1-flash-lite",
+    request_id=response.response_id,
+    timestamp=datetime.now(timezone.utc),
+    input_tokens=response.usage_metadata.prompt_token_count,
+    output_tokens=response.usage_metadata.candidates_token_count,
+    total_tokens=response.usage_metadata.total_token_count,
+    latency_ms=latency_ms,
+    input_cost=cost_result["input_cost"],
+    output_cost=cost_result["output_cost"],
+    total_cost=cost_result["total_cost"],
+    status="success",
     )
-    #print("usage_record", usage_record)
+    
+    #print("usage_record", usage_record)    
+    save_usage_record(usage_record)
+
     return response.text
