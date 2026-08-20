@@ -22,5 +22,6 @@ class LLMUsage:
     input_cost: float
     output_cost: float
     total_cost: float
+    operation: str
 
     status: str
