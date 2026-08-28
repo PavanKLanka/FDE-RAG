@@ -1,8 +1,47 @@
 import sys
 import sqlite3
+import os
 from pathlib import Path
-
+from dotenv import load_dotenv
+from supabase import create_client, Client
 from src.monitoring.usage import LLMUsage
+# ============================================================
+# ENVIRONMENT
+# ============================================================
+
+load_dotenv()
+
+# ============================================================
+# SUPABASE CONFIGURATION
+# ============================================================
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+if not SUPABASE_URL:
+    raise ValueError("SUPABASE_URL was not found in .env")
+
+if not SUPABASE_KEY:
+    raise ValueError("SUPABASE_KEY was not found in .env")
+
+supabase: Client = create_client(
+    SUPABASE_URL,
+    SUPABASE_KEY
+)
+
+
+def test_supabase_connection():
+
+    response = (
+        supabase
+        .table("usage_logs")
+        .select("*")
+        .limit(1)
+        .execute()
+    )
+
+    print("Supabase connection successful.")
+    print("Response:", response.data)
 
 
 # ============================================================
@@ -97,12 +136,43 @@ def delete_all_rows():
 
 def save_usage_record(usage: LLMUsage):
 
+    data = {
+        "request_id": usage.request_id,
+        "timestamp": usage.timestamp.isoformat(),
+        "provider": usage.provider,
+        "model": usage.model,
+        "input_tokens": usage.input_tokens,
+
+        "output_tokens": usage.output_tokens,
+        "total_tokens": usage.total_tokens,
+        "input_cost": usage.input_cost,
+        "output_cost": usage.output_cost,
+        "total_cost": usage.total_cost,
+
+        "latency_ms": usage.latency_ms,
+        "operation": usage.operation,
+        "status": usage.status,
+    }
+
+    response = (
+        supabase
+        .table("usage_logs")
+        .insert(data)
+        .execute()
+    )
+
+    print("Usage record saved to Supabase.")
+    print("Supabase response:", response.data)
+
+
+""" def save_usage_record(usage: LLMUsage):
+
     connection = get_connection()
 
     cursor = connection.cursor()
 
     cursor.execute(
-        """
+        
         INSERT INTO usage_logs (
 
             request_id,
@@ -126,7 +196,7 @@ def save_usage_record(usage: LLMUsage):
 
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
+        
         (
             usage.request_id,
             usage.timestamp.isoformat(),
@@ -152,7 +222,7 @@ def save_usage_record(usage: LLMUsage):
     connection.commit()
 
     connection.close()
-
+ """
 
 # ============================================================
 # ALTER TABLE TO ADD COLUMN DYNAMICALLY
@@ -195,21 +265,40 @@ def add_column_dynamically(column_name, data_type):
 
 
 
+def test_save_usage_record():
+
+    from datetime import datetime, timezone
+
+    test_usage = LLMUsage(
+        provider="Google",
+        model="gemini-3.1-flash-lite",
+        request_id="supabase-test-001",
+        timestamp=datetime.now(timezone.utc),
+        input_tokens=100,
+
+        output_tokens=20,
+        total_tokens=120,
+        latency_ms=450.25,
+        input_cost=0.0005,
+
+        output_cost=0.0003,
+        total_cost=0.0008,
+        operation="answer_generation",
+        status="success",
+    )
+
+    save_usage_record(test_usage)
+
+
+
 # ============================================================
 # MAIN
 # ============================================================
 
-if __name__ == "__main__":
-
-    initialize_database()
-
-    print("SupportPilot database initialized successfully.")
-
-    print(f"Database location: {DB_PATH}")
-
-
 # The safety guard checks the terminal command
 if __name__ == "__main__":
+    
+    test_save_usage_record()
 
     # Check if the user typed an extra word in the terminal
     if len(sys.argv) > 1:
